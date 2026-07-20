@@ -6,7 +6,7 @@ from flask import Flask, request, jsonify, render_template_string
 app = Flask(__name__)
 
 # --- Load the SVC Model Safely ---
-MODEL_PATH = 'svc_model.pkl'
+MODEL_PATH = 'SVC_model.pkl'
 if os.path.exists(MODEL_PATH):
     with open(MODEL_PATH, 'rb') as f:
         model = pickle.load(f)
@@ -323,7 +323,7 @@ HTML_TEMPLATE = """
 
 @app.route('/')
 def home():
-    error_msg = None if model else "⚠️ Missing 'svc_model.pkl' inside your base root deployment path."
+    error_msg = None if model else "⚠️ Missing 'SVC_model.pkl' inside your base root deployment path."
     return render_template_string(HTML_TEMPLATE, error_msg=error_msg)
 
 @app.route('/predict', methods=['POST'])
