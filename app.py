@@ -6,25 +6,17 @@ from flask import Flask, request, jsonify, render_template_string
 app = Flask(__name__)
 
 # ==========================================
-# 1. MODEL INITIALIZATION (UNIVERSAL PATH)
+# 1. MODEL INITIALIZATION
 # ==========================================
-# Resolves model path whether deployed on Render (root) or Vercel (/api subfolder)
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-POSSIBLE_PATHS = [
-    os.path.join(CURRENT_DIR, 'svc_model.pkl'),
-    os.path.join(os.path.dirname(CURRENT_DIR), 'svc_model.pkl'),
-    'svc_model.pkl'
-]
+MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'svc_model.pkl')
 
 model = None
-for path in POSSIBLE_PATHS:
-    if os.path.exists(path):
-        try:
-            with open(path, 'rb') as f:
-                model = pickle.load(f)
-            break
-        except Exception:
-            continue
+if os.path.exists(MODEL_PATH):
+    try:
+        with open(MODEL_PATH, 'rb') as f:
+            model = pickle.load(f)
+    except Exception:
+        model = None
 
 # ==========================================
 # 2. EMBEDDED UI & ANIMATED THEMES
@@ -39,7 +31,6 @@ HTML_TEMPLATE = """
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* THEME DEFINITIONS */
         :root[data-theme="light"] {
             --bg-canvas: #f8fafc;
             --surface: #ffffff;
@@ -211,7 +202,6 @@ HTML_TEMPLATE = """
             transform: translateY(1px);
         }
 
-        /* RESULT DISPLAY & ANIMATION */
         #result-box {
             display: none;
             margin-top: 2rem;
@@ -355,7 +345,6 @@ HTML_TEMPLATE = """
         const resultBox = document.getElementById('result-box');
         const resultVal = document.getElementById('result-value');
 
-        // Loading animation state
         spinner.style.display = 'inline-block';
         btnText.innerText = 'Calculating Matrix...';
         btn.disabled = true;
@@ -406,7 +395,6 @@ def predict():
     
     try:
         data = request.json
-        # Feature array configured to match trained SVC layout
         features = np.array([[
             int(data['gender']),
             float(data['age']),
@@ -424,7 +412,6 @@ def predict():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-# Dynamic server invocation for container / cloud hosting
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
