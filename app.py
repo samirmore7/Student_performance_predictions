@@ -27,7 +27,7 @@ for path in candidate_paths:
             continue
 
 # ==========================================
-# 2. EMBEDDED UI & ANIMATED THEMES
+# 2. EMBEDDED UI & ADVANCED ANALYTICS DASHBOARD
 # ==========================================
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -35,7 +35,7 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Performance Matrix</title>
+    <title>Student Performance Matrix & Analytics</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
@@ -50,6 +50,7 @@ HTML_TEMPLATE = """
             --primary-hover: #4338ca;
             --accent-glow: rgba(79, 70, 229, 0.15);
             --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            --bar-bg: #e2e8f0;
         }
 
         :root[data-theme="dark"] {
@@ -63,6 +64,7 @@ HTML_TEMPLATE = """
             --primary-hover: #4f46e5;
             --accent-glow: rgba(99, 102, 241, 0.25);
             --card-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --bar-bg: #374151;
         }
 
         :root[data-theme="cyberpunk"] {
@@ -76,6 +78,7 @@ HTML_TEMPLATE = """
             --primary-hover: #d6006b;
             --accent-glow: rgba(255, 0, 127, 0.4);
             --card-shadow: 0 0 25px rgba(255, 0, 127, 0.25), 0 0 15px rgba(0, 240, 255, 0.2);
+            --bar-bg: #2d124d;
         }
 
         * {
@@ -98,7 +101,7 @@ HTML_TEMPLATE = """
 
         .dashboard-card {
             width: 100%;
-            max-width: 820px;
+            max-width: 900px;
             background-color: var(--surface);
             border: 1px solid var(--border-color);
             border-radius: 20px;
@@ -192,8 +195,6 @@ HTML_TEMPLATE = """
             font-size: 1rem;
             font-weight: 700;
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -206,34 +207,93 @@ HTML_TEMPLATE = """
             transform: translateY(-1px);
         }
 
-        .btn-predict:active {
-            transform: translateY(1px);
-        }
-
-        #result-box {
+        /* ANALYTICS CONTAINER */
+        #analytics-box {
             display: none;
-            margin-top: 2rem;
-            padding: 1.75rem;
-            background-color: var(--surface-subtle);
-            border: 1px dashed var(--primary);
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .kpi-card {
+            background: var(--surface-subtle);
+            border: 1px solid var(--border-color);
             border-radius: 14px;
+            padding: 1.25rem;
             text-align: center;
-            transform: scale(0.95);
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        #result-box.visible {
-            display: block;
-            transform: scale(1);
-            opacity: 1;
+        .kpi-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
         }
 
-        #result-value {
-            font-size: 2.25rem;
+        .kpi-value {
+            font-size: 1.8rem;
             font-weight: 800;
             color: var(--primary);
             margin-top: 0.25rem;
+        }
+
+        .metric-row {
+            margin-bottom: 1rem;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 10px;
+            background-color: var(--bar-bg);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.8s ease-in-out;
+        }
+
+        .insights-list {
+            list-style: none;
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .insight-item {
+            background: var(--surface-subtle);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-left: 4px solid var(--primary);
         }
 
         .spinner {
@@ -258,7 +318,7 @@ HTML_TEMPLATE = """
     <header>
         <div>
             <h1>🎓 Student Performance Matrix</h1>
-            <p class="subtitle">SVC inference engine for academic trajectory classification</p>
+            <p class="subtitle">SVC inference engine & full diagnostic analytics suite</p>
         </div>
         <select class="theme-select" id="themeSelector" onchange="applyTheme(this.value)">
             <option value="dark">🌙 Dark Slate</option>
@@ -329,13 +389,65 @@ HTML_TEMPLATE = """
 
         <button type="submit" class="btn-predict" id="submitBtn">
             <span class="spinner" id="btnSpinner"></span>
-            <span id="btnText">🔮 Run Classification Prediction</span>
+            <span id="btnText">🔮 Run Classification & Analytics</span>
         </button>
     </form>
 
-    <div id="result-box">
-        <p style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase;">Predicted Performance Classification</p>
-        <div id="result-value">-</div>
+    <!-- EXPANDED ANALYTICS SECTION -->
+    <div id="analytics-box">
+        <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem;">📊 Performance & Diagnostic Analytics</h2>
+        
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">Predicted Class</div>
+                <div class="kpi-value" id="kpi-class">-</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Decision Confidence</div>
+                <div class="kpi-value" id="kpi-conf">-</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Risk Index</div>
+                <div class="kpi-value" id="kpi-risk">-</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Academic Momentum</div>
+                <div class="kpi-value" id="kpi-delta">-</div>
+            </div>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+            <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-secondary);">BENCHMARK VS TARGETS</h3>
+            
+            <div class="metric-row">
+                <div class="metric-header">
+                    <span>Attendance Benchmark</span>
+                    <span id="bar-att-val">0%</span>
+                </div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-att"></div></div>
+            </div>
+
+            <div class="metric-row">
+                <div class="metric-header">
+                    <span>Weekly Study Target (Max 40 hrs base)</span>
+                    <span id="bar-study-val">0 hrs</span>
+                </div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-study"></div></div>
+            </div>
+
+            <div class="metric-row">
+                <div class="metric-header">
+                    <span>Overall Academic Score</span>
+                    <span id="bar-score-val">0%</span>
+                </div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-score"></div></div>
+            </div>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+            <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-secondary);">INFLUENCE DRIVERS & DIAGNOSTICS</h3>
+            <ul class="insights-list" id="insights-container"></ul>
+        </div>
     </div>
 </div>
 
@@ -350,13 +462,11 @@ HTML_TEMPLATE = """
         const btn = document.getElementById('submitBtn');
         const spinner = document.getElementById('btnSpinner');
         const btnText = document.getElementById('btnText');
-        const resultBox = document.getElementById('result-box');
-        const resultVal = document.getElementById('result-value');
+        const analyticsBox = document.getElementById('analytics-box');
 
         spinner.style.display = 'inline-block';
-        btnText.innerText = 'Calculating Matrix...';
+        btnText.innerText = 'Analyzing Metrics...';
         btn.disabled = true;
-        resultBox.classList.remove('visible');
 
         const formData = new FormData(e.target);
         const payload = Object.fromEntries(formData.entries());
@@ -370,17 +480,41 @@ HTML_TEMPLATE = """
             const data = await res.json();
 
             if (data.success) {
-                resultVal.innerText = 'Class: ' + data.prediction;
-                resultBox.style.display = 'block';
-                setTimeout(() => resultBox.classList.add('visible'), 30);
+                // Populate KPIs
+                document.getElementById('kpi-class').innerText = 'Class ' + data.prediction;
+                document.getElementById('kpi-conf').innerText = data.analytics.confidence + '%';
+                document.getElementById('kpi-risk').innerText = data.analytics.risk_index;
+                document.getElementById('kpi-delta').innerText = (data.analytics.score_delta > 0 ? '+' : '') + data.analytics.score_delta + ' pts';
+
+                // Populate Progress Bars
+                document.getElementById('bar-att').style.width = Math.min(data.analytics.attendance, 100) + '%';
+                document.getElementById('bar-att-val').innerText = data.analytics.attendance + '%';
+
+                document.getElementById('bar-study').style.width = Math.min((data.analytics.study_hours / 40) * 100, 100) + '%';
+                document.getElementById('bar-study-val').innerText = data.analytics.study_hours + ' hrs/wk';
+
+                document.getElementById('bar-score').style.width = Math.min(data.analytics.final_score, 100) + '%';
+                document.getElementById('bar-score-val').innerText = data.analytics.final_score + '%';
+
+                // Populate Insights List
+                const list = document.getElementById('insights-container');
+                list.innerHTML = '';
+                data.analytics.insights.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'insight-item';
+                    li.innerHTML = item;
+                    list.appendChild(li);
+                });
+
+                analyticsBox.style.display = 'block';
             } else {
                 alert('Prediction Error: ' + data.error);
             }
         } catch (err) {
-            alert('Failed to connect to the prediction server.');
+            alert('Failed to connect to the backend engine.');
         } finally {
             spinner.style.display = 'none';
-            btnText.innerText = '🔮 Run Classification Prediction';
+            btnText.innerText = '🔮 Run Classification & Analytics';
             btn.disabled = false;
         }
     });
@@ -390,7 +524,7 @@ HTML_TEMPLATE = """
 """
 
 # ==========================================
-# 3. ROUTE ENDPOINTS
+# 3. ROUTE ENDPOINTS & ANALYTICS CALCULATION
 # ==========================================
 @app.route('/')
 def home():
@@ -403,20 +537,79 @@ def predict():
     
     try:
         data = request.json
+        gender = int(data['gender'])
+        age = float(data['age'])
+        study_hours = float(data['study_hours'])
+        attendance = float(data['attendance'])
+        parent_edu = int(data['parent_edu'])
+        internet = int(data['internet'])
+        extracurricular = int(data['extracurricular'])
+        prev_score = float(data['prev_score'])
+        final_score = float(data['final_score'])
+
         features = np.array([[
-            int(data['gender']),
-            float(data['age']),
-            float(data['study_hours']),
-            float(data['attendance']),
-            int(data['parent_edu']),
-            int(data['internet']),
-            int(data['extracurricular']),
-            float(data['prev_score']),
-            float(data['final_score'])
+            gender, age, study_hours, attendance, parent_edu,
+            internet, extracurricular, prev_score, final_score
         ]])
         
         prediction = model.predict(features)[0]
-        return jsonify({'success': True, 'prediction': str(prediction)})
+
+        # -------------------------------------------------------------
+        # CALCULATE COMPREHENSIVE ANALYTICS
+        # -------------------------------------------------------------
+        # 1. Decision Boundary Distance -> Estimated Confidence
+        decision_val = float(model.decision_function(features)[0])
+        # Logistic sigmoid mapping of distance to proxy confidence (50% - 99%)
+        confidence = round((1 / (1 + np.exp(-abs(decision_val)))) * 100, 1)
+
+        # 2. Score Momentum (Change in performance)
+        score_delta = round(final_score - prev_score, 1)
+
+        # 3. Risk Level Assessment
+        if attendance < 65 or final_score < 50:
+            risk_index = "High"
+        elif attendance < 80 or final_score < 68:
+            risk_index = "Moderate"
+        else:
+            risk_index = "Low"
+
+        # 4. Actionable Diagnostic Insights
+        insights = []
+        if attendance < 75:
+            insights.append("⚠️ <strong>Attendance Warning:</strong> Attendance rate is sub-optimal; consistent class attendance strongly stabilizes SVC classifications.")
+        else:
+            insights.append("✅ <strong>Strong Attendance:</strong> High attendance acts as a major positive anchor for classification.")
+
+        if study_hours >= 15:
+            insights.append(f"✅ <strong>Dedicated Study Time:</strong> {study_hours} hrs/week places the student in the upper performance tier.")
+        else:
+            insights.append(f"📌 <strong>Study Opportunity:</strong> Increasing study duration beyond {study_hours} hrs/week could improve academic trajectory.")
+
+        if score_delta > 0:
+            insights.append(f"📈 <strong>Positive Growth:</strong> Gained {score_delta} points compared to previous test performance.")
+        elif score_delta < 0:
+            insights.append(f"📉 <strong>Performance Dip:</strong> Dropped {abs(score_delta)} points relative to the previous benchmark.")
+        else:
+            insights.append("⚖️ <strong>Stable Performance:</strong> Final score directly mirrors prior academic baseline.")
+
+        if internet == 1 and extracurricular == 1:
+            insights.append("🌟 <strong>Holistic Profile:</strong> High resource access and extracurricular engagement complement direct metrics.")
+
+        analytics_payload = {
+            'confidence': confidence,
+            'risk_index': risk_index,
+            'score_delta': score_delta,
+            'attendance': attendance,
+            'study_hours': study_hours,
+            'final_score': final_score,
+            'insights': insights
+        }
+
+        return jsonify({
+            'success': True,
+            'prediction': str(prediction),
+            'analytics': analytics_payload
+        })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
