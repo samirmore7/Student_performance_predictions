@@ -6,17 +6,25 @@ from flask import Flask, request, jsonify, render_template_string
 app = Flask(__name__)
 
 # ==========================================
-# 1. MODEL INITIALIZATION
+# 1. ROBUST MODEL INITIALIZATION (SVC_model.pkl)
 # ==========================================
-MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'svc_model.pkl')
-
 model = None
-if os.path.exists(MODEL_PATH):
-    try:
-        with open(MODEL_PATH, 'rb') as f:
-            model = pickle.load(f)
-    except Exception:
-        model = None
+base_dir = os.path.dirname(os.path.abspath(__file__))
+
+candidate_paths = [
+    os.path.join(base_dir, 'SVC_model.pkl'),
+    os.path.join(os.getcwd(), 'SVC_model.pkl'),
+    'SVC_model.pkl'
+]
+
+for path in candidate_paths:
+    if os.path.exists(path):
+        try:
+            with open(path, 'rb') as f:
+                model = pickle.load(f)
+            break
+        except Exception:
+            continue
 
 # ==========================================
 # 2. EMBEDDED UI & ANIMATED THEMES
@@ -261,7 +269,7 @@ HTML_TEMPLATE = """
 
     {% if not model_loaded %}
         <div style="color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid #ef4444;">
-            ⚠️ <strong>Missing Model File:</strong> Ensure <code>svc_model.pkl</code> exists in the root directory.
+            ⚠️ <strong>Missing Model File:</strong> Ensure <code>SVC_model.pkl</code> exists in the root directory.
         </div>
     {% endif %}
 
@@ -391,7 +399,7 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     if not model:
-        return jsonify({'success': False, 'error': 'Model pickle file is unavailable.'})
+        return jsonify({'success': False, 'error': 'Model file (SVC_model.pkl) is unavailable.'})
     
     try:
         data = request.json
